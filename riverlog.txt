@@ -1,0 +1,13 @@
+2017-06-13 09:49:01.299051 - Retrieved data for Missouri. No errors
+2017-06-13 09:49:01.299051 - Retrieved data for San_jacinto. No errors
+2017-06-13 09:49:01.299051 - Retrieved data for Colorado. No errors
+2017-06-13 09:49:01.299051 - Retrieved data for Riogrande. No errors
+2017-06-13 09:49:01.299051 - Retrieved data for Pecos. No errors
+2017-06-13 09:49:01.299051 - Retrieved data for Neches. No errors
+2017-06-13 09:49:01.299051 - Retrieved data for Guadalupe. No errors
+2017-06-13 09:49:01.299051 - Retrieved data for Sabine. No errors
+2017-06-13 09:49:01.299051 - Retrieved data for Trinity. No errors
+2017-06-13 09:49:01.299051 - Retrieved data for Frio_river. No errors
+2017-06-13 09:49:01.299051 - Retrieved data for Redriver. No errors
+2017-06-13 09:49:01.299051 - Retrieved data for Mississippi. No errors
+2017-06-13 09:49:01.299051 - Retrieved data for Canadian. No errors
