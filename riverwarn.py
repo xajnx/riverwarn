@@ -15,6 +15,7 @@ import os
 from datetime import datetime
 from fb_auth import get_token
 import pause
+from nws_alert import nws_alert
 
 #set some variables
 now = datetime.now()
@@ -32,7 +33,7 @@ app_secret = creds['fb_keys']['riverwarn']['app_secret']
 auth = get_token(app_id, app_secret, app_token)
 graph = facebook.GraphAPI(access_token = auth)
 
-with open(work + 'riverwarn/rivers.txt', 'r') as rivers:
+with open(work + 'riverwarn/riverlist.txt', 'r') as rivers:
     RIVER_URL = eval(rivers.read())
 
 def check_river(url):
@@ -40,7 +41,8 @@ def check_river(url):
         return('Please enter a valid URL')
     
     ALERT_LEVELS = ["major", "moderate", "flood", "action", "low"]
-    river_link = 'https://water.weather.gov/ahps/'
+    flood_link = 'http://water.weather.gov/ahps2/hydrograph.php?wfo=lch&gage='
+    flood_map = 'http://water.weather.gov/ahps2/inundation/index.php?gage='
     headers = {"user-agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:53.0) Gecko/20100101 Firefox/53.0"}
     response = requests.get(url, headers=headers)
     soup = BS(response.text, 'lxml')
@@ -52,8 +54,10 @@ def check_river(url):
 
         river_name = river.get_text(strip=True)
         river_data = river.find_next_sibling("div")
+        stx_id = river.attrs['id']
         data.append({
             "name": river_name,
+            "id": stx_id,
             "stage": river_data.select_one(".stage_stage_flow").get_text(strip=True).replace("Latest Stage: ", ""),
             "flood_lvl": river_data.select_one(".flood_stage_flow").get_text(strip=True).replace("Flood Stage: ", "").replace(" Feet", ""),
             "warns": river_data.select_one(".current_warns_statmnts_ads > b").next_sibling.strip(),
@@ -68,6 +72,9 @@ def check_river(url):
     try:
         for n in range(len(data)):
             station = data[n]['name']
+            sta_id = data[n]['id']
+            nws_link = flood_link + sta_id
+            nws_warn = nws_alert(nws_link)
 
             if data[n]['stage'] == 'n/a' or data[n]['stage'] == 'Latest Flow: n/a' or data[n]['stage'] == 'Latest Stage: n/a':
                 pass
@@ -106,20 +113,24 @@ def check_river(url):
                     if stage != None and action != None and stage < action :
                         pass
                     elif stage != None and major != None and major != 0 and stage > major :
-                        #print('The {} has reached [Major Flood Stage: ({}Ft)].\n[Current Guage Depth]: {}Ft\n[Warnings]:{}\n'.format(station, major, stage, warn))
-                        graph.put_object(page_id, 'feed', message=('The {} has reached [Major Flood Stage: ({}Ft)].\n[Current Guage Depth]: {}Ft\n[Warnings]:{}\n'.format(station, major, stage, warn)), link=river_link)
+                        river_link = flood_map + sta_id
+                        #print('The {} has reached [Major Flood Stage: ({}Ft)].\n[Current Guage Depth]: {}Ft\n[Warnings]:{}\nNWS Statement:\n {}'.format(station, major, stage, warn, nws_warn))
+                        graph.put_object(page_id, 'feed', message=('The {} has reached [Major Flood Stage: ({}Ft)].\n[Current Guage Depth]: {}Ft\n[Warnings]:{}\nNWS Statement:\n {}'.format(station, major, stage, warn, nws_warn)), link=river_link)
                     elif stage != None and moderate != None and moderate != 0 and stage > moderate:
+                        river_link = flood_map + sta_id
                         maj_diff = round((major - stage), 2)
-                        #print('The {} has reached [Moderate Flood Stage]: {}Ft.\n[Current Guage Depth]: {}Ft.\n[Major Flood Stage] in {}ft.\n [Warnings]:[}\n'.format(station, moderate, stage, maj_diff, warn))
-                        graph.put_object(page_id, 'feed', message=('The {} has reached [Moderate Flood Stage]: {}Ft.\n[Current Guage Depth]: {}Ft.\n[Major Flood Stage] in {}ft.\n [Warnings]:[}\n'.format(station, moderate, stage, maj_diff, warn)), link= river_link)
+                        #print('The {} has reached [Moderate Flood Stage ({}Ft.)]: \n[Current Guage Depth]: {}Ft.\n[Major Flood Stage] in {}ft.\n [Warnings]:[}\nNWS Statement:\n {}'.format(station, moderate, stage, maj_diff, warn, nws_warn))
+                        graph.put_object(page_id, 'feed', message=('The {} has reached [Moderate Flood Stage ({}Ft.)]: \n[Current Guage Depth]: {}Ft.\n[Major Flood Stage] in {}ft.\n [Warnings]:[}\nNWS Statement:\n {}'.format(station, moderate, stage, maj_diff, warn, nws_warn)), link=river_link)
                     elif stage != None and flood != None and flood != 0 and stage > flood:
+                        river_link = flood_map + sta_id
                         mod_diff = round((moderate - stage), 2)
-                        #print('The {} has reached [Flood Stage]: {}Ft.\n[Current Gauge Depth]: {}Ft.\n[Moderate Flood Stage] in {}Ft.\n[Warnings]: {}\n'.format(station, flood, stage, mod_diff, warn))
-                        graph.put_object(page_id, 'feed', message=('The {} has reached [Flood Stage]: {}Ft.\n[Current Gauge Depth]: {}Ft.\n[Moderate Flood Stage] in {}Ft.\n[Warnings]: {}\n'.format(station, flood, stage, mod_diff, warn)), link= river_link)
+                        #print('The {} has reached [Flood Stage ({}Ft.)]:\n[Current Gauge Depth]: {}Ft.\n[Moderate Flood Stage] in {}Ft.\n[Warnings]: {}\nNWS Statement:\n {}'.format(station, flood, stage, mod_diff, warn, nws_warn))
+                        graph.put_object(page_id, 'feed', message=('The {} has reached [Flood Stage ({}Ft.)]:\n[Current Gauge Depth]: {}Ft.\n[Moderate Flood Stage] in {}Ft.\n[Warnings]: {}\nNWS Statement:\n {}'.format(station, flood, stage, mod_diff, warn, nws_warn)), link=river_link)
                     elif stage != None and action != None and action != 0 and stage > action:
+                        river_link = flood_link + sta_id
                         flood_diff = round((flood - stage), 2)
-                        #print('The {} has reached [Action Stage]: {}Ft.\n[Current Gauge Depth]: {}Ft.\n[Flood Stage] in {}Ft.\n[Warnings]: {}\n'.format(station, action, stage, flood_diff, warn))
-                        graph.put_object(page_id, 'feed', message=('The {} has reached [Action Stage]: {}Ft.\n[Current Gauge Depth]: {}Ft.\n[Flood Stage] in {}Ft.\n[Warnings]: {}\n'.format(station, action, stage, flood_diff, warn)), link= river_link)
+                        #print('The {} has reached [Action Stage ({}Ft.)]:\n[Current Gauge Depth]: {}Ft.\n[Flood Stage] in {}Ft.\n[Warnings]: {}\nNWS Statement:\n {}'.format(station, action, stage, flood_diff, warn, nws_warn))
+                        graph.put_object(page_id, 'feed', message=('The {} has reached [Action Stage ({}Ft.)]:\n[Current Gauge Depth]: {}Ft.\n[Flood Stage] in {}Ft.\n[Warnings]: {}\nNWS Statement:\n {}'.format(station, action, stage, flood_diff, warn, nws_warn)), link=river_link)
 
                         f.write('[{}-{}-{}_{:d}:{:02d}]:{} - Stage check successful.\n'.format(now.year, now.month, now.day,now.hour, now.minute, url.capitalize()))
                     f.close()
@@ -132,7 +143,7 @@ def check_list(url_list):
     f = open(log, 'w')
     f.write('[{}-{}-{}_{:d}:{:02d}] - Gauge check initiated..\n'.format(now.year, now.month, now.day, now.hour, now.minute))
     for url in RIVER_URL:
-         print(check_river(RIVER_URL[url]))
+         check_river(RIVER_URL[url])
          pause.seconds(5)
          f.write('[{}-{}-{}_{:d}:{:02d}]:{} - Stage check successful.\n'.format(now.year, now.month, now.day, now.hour, now.minute, url.capitalize()))
     f.close()
