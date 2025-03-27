@@ -1,2 +1,0 @@
-[2017-7-3_9:34] - Gauge check initiated..
-[2017-7-3_9:34]:Http://water.weather.gov/ahps2/river.php?wfo=fwd&wfoid=18693&riverid=204122&pt%5b%5d=all&allpoints=144734&data%5b%5d=xml - Stage check successful.
