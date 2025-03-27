@@ -1,13 +1,41 @@
-River Flood Warning System v2.1
-copyright Aaron Nelson 2017 (aaron.nelson805@gmail.com)
+# Riverwarn: Texas River Early Warning System
 
-RiverWarn is a python3 script that will retrieve river gauge data from https://water.weather.gov and posts an alert to your 
-Facebook account (or page you manage) when flood stages have been reached.
+`riverwarn` is a Python-based tool designed to monitor river stages in Texas and provide early warnings for potential flooding. It fetches real-time data from the USGS National Water Information System (NWIS) API, displays color-coded status updates in the terminal, and logs historical data in a SQLite database.
 
-**USAGE:**
- - Once the initial script *riverwarn.py* is executed the flood check function is passed to a scheduler which runs every 2 hours. This delay can be changed at the top of the file where the variables are defined under `check_delay`. Future releases will provide an option to run the script once, or scheduled.
- - You will have to obtain a Facebook OAUTH Token (https://developers.facebook.com/docs/pages/getting-started). Future releases will provide a method for automatic token generation. Once you have your FB Token (note: if posting to a page you will need to obtain the page ID also), enter the values in the provided *river_key.txt.* file.
- - Finally you will need to populate your *river_list.txt* file with the URLS for the rivers you want to check. To find your URL you will need to visit http://water.weather.gov/ahps2/glance.php? and first select your region, and then river. Put the URL in *river_list.txt* using the dictionary format: `'river name':'river url'` The rivers currently in the list are for example purposes and can be replaced with different values.
- - It is preferable to add `riverwarn.py` to `/usr/bin/` or `/usr/sbin/` and set up **cron** to run at boot. Executing the command: `crontab -e` and then on the last line enter `@reboot /path/to/riverwarn.py`will make `riverwarn.py` run at startup.
+## Features
+- Fetches current river stages for specified Texas rivers using the USGS NWIS API.
+- Displays river status with color-coded output:
+  - **Green**: Safe levels.
+  - **Yellow**: Near flood stage (90% of flood level).
+  - **Red**: Flooding.
+- Stores historical stage data in a local SQLite database.
+- Configurable via a `rivers.json` file for easy river management.
 
-See it in action here: https://www.facebook.com/TxRiverFloodWarn/
+## Requirements
+- Python 3.7+
+- Dependencies (listed in `requirements.txt`):
+  - `requests`
+  - `colorama`
+
+## Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/xajnx/riverwarn.git
+   cd riverwarnInstall dependencies:pip install -r requirements.txtEnsure rivers.json is configured (see below).ConfigurationEdit rivers.json to specify the rivers you want to monitor. Example:[
+    {
+        "name": "Brazos River at Richmond",
+        "gage_id": "08114000",
+        "flood_stage": 45.0
+    },
+    {
+        "name": "Colorado River at Wharton",
+        "gage_id": "08162000",
+        "flood_stage": 39.0
+    }
+]name: River name for display.gage_id: USGS site code (find at https://waterdata.usgs.gov/tx/nwis/rt).flood_stage: Flood threshold in feet (verify with official sources).UsageRun the script:python riverwarn.pyOutput will show current stages and statuses in the terminal, and data will be saved to river_data.db.Data StorageHistorical data is stored in a SQLite database (river_data.db) with the schema:id: Auto-incrementing ID.river: River name.stage: Current stage in feet.timestamp: ISO-formatted timestamp.ContributingFeel free to submit issues or pull requests on GitHub. See Todo.md for planned enhancements.
+
+## License
+This project is open-source and available under the MIT License.
+
+author: A.J. Nelson (xajnx)
+donate: PayPal/Venmo - @therealajnelson
