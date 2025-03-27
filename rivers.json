@@ -1,0 +1,17 @@
+[
+    {
+        "name": "Brazos River at Richmond",
+        "gage_id": "08114000",
+        "flood_stage": 45.0
+    },
+    {
+        "name": "Colorado River at Wharton",
+        "gage_id": "08162000",
+        "flood_stage": 39.0
+    },
+    {
+        "name": "San Antonio River at Goliad",
+        "gage_id": "08188500",
+        "flood_stage": 25.0
+    }
+]
